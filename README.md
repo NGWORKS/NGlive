@@ -102,7 +102,32 @@ python api.py
 
 
 # 三、如何工作
-TODO
+## 1、概览
+**NGlive并不集成录制功能：** NGlive的录制功能依赖于[`BililiveRecorder`](https://github.com/Bililive/BililiveRecorder)，他们中间通过http api 进行数据交换。
+**NGlive不是一个单机的录播系统：** NGlive是一个分布式的录播集群，它应当由 `录制客户端（NGlive）`、`均衡服务器（RecorderMaster）`、`web服务`构成。但是他们之间相互独立，正如本项目，没有中心服务器的依赖，您也可以让其很好的运行。
+**NGlive是一个流程高度可以编辑的系统：** 您可以随意的编排录播消费的方法，不用按部就班的操作，如果配合图形化的ui，您可以向搭积木一样安排您的流程。
+
+他们之间的信息交换如图：
+
+```sequence
+BililiveRecorder->NGlive: webHook
+NGlive-->BililiveRecorder: GraphQL
+BililiveRecorder-->NGlive: GraphQL 返回数据
+
+NGlive->RecorderMaster: http(s)反向API
+RecorderMaster->NGlive: http(s)正向API
+NGlive-->RecorderMaster: WS反向
+RecorderMaster-->NGlive: WS正向
+
+webserver-->RecorderMaster: ws
+webserver->RecorderMaster: http(s)
+webserver-->>NGlive: http(s)
+webserver-->>NGlive: ws(s)
+
+```
+我们为有`公网IP`资源的机器提供了`正向HTTP`和`正向ws`使其可以被其他成员访问，为其提供了更加完美的开放能力。同时没有`公网IP`资源的机器也至少可以通过`反向http`和`反向ws`与均衡服务器进行交互，而WS服务为其与其他成员进行直接交互提供了可能。
+
+
 
 # 四、贡献 - 特别感谢 - license
 ## 1、贡献
