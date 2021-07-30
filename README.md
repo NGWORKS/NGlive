@@ -111,21 +111,9 @@ python api.py
 
 他们之间的信息交换如图：
 
-```sequence
-BililiveRecorder->NGlive: webHook
-NGlive-->BililiveRecorder: GraphQL
-BililiveRecorder-->NGlive: GraphQL 返回数据
+![时序图](./img1.png)
 
-NGlive->RecorderMaster: http(s)反向API
-RecorderMaster->NGlive: http(s)正向API
-NGlive-->RecorderMaster: WS反向
-RecorderMaster-->NGlive: WS正向
 
-webserver-->RecorderMaster: ws
-webserver->RecorderMaster: http(s)
-webserver-->>NGlive: http(s)
-webserver-->>NGlive: ws(s)
-```
 我们为有`公网IP`资源的机器提供了`正向HTTP`和`正向ws`使其可以被其他成员访问，为其提供了更加完美的开放能力。
 
 同时没有`公网IP`资源的机器也至少可以通过`反向http`和`反向ws`与均衡服务器进行交互，而WS服务为其与其他成员进行直接交互提供了可能。
@@ -134,7 +122,60 @@ webserver-->>NGlive: ws(s)
 
 **NGlive尝试使用了 `生产者-消费者` 模型** 每个模块之间的联系通过任务队列进行数据传递。
 
-**NGlive有一定的自我恢复能力** 当线程医生 发现某个线程意外退出时，他会将该线程重启，以保证程序整体的运行。
+**NGlive有一定的自我恢复能力** 当`tasksDocter`发现某个线程意外退出时，他会将该线程重启，以保证程序整体的正常运行。
+
+## 2、web API 与数据结构
+### 2.1、错误码
+| 错误码 | 类型 | 说明 |
+|-------| -----|----  |
+| 4031| 服务器理解需求，但拒绝服务|错误的房间号|
+| 4032| 服务器理解需求，但拒绝服务|房间号重复添加|
+| 4033| 服务器理解需求，但拒绝服务|这个房间位于黑名单|
+| 4042| 找不到相关信息|房间号不存在|
+
+### 2.2、Http API
+#### 2.2.1 获取当前添加的所有房间
+ **`GET`**   http://127.0.0.1:8100/allroom
+
+获得当前服务器添加的所有房间与其配置。
+
+#### 2.2.2 获取指定房间信息
+**`GET`**   http://127.0.0.1:8100/getroom
+
+**请求参数**
+
+|  参数 |  类型        | 说明|
+|-------|   ------     |----|
+|roomid |  interesting|房间号码|
+
+获得指定房间号码的信息和配置。
+
+#### 2.3.3 添加房间
+ **`GET`**   http://127.0.0.1:8100/addroom
+
+**请求参数**
+
+|  参数 |  类型        | 说明|
+|-------|   ------     |----|
+|roomid |  interesting|房间号码|
+
+添加一个房间，并立即开始录制。
+
+#### 2.4.4 删除房间
+ **`GET`**   http://127.0.0.1:8100/removeroom
+
+**请求参数**
+
+|  参数 |  类型        | 说明|
+|-------|   ------     |----|
+|roomid |  interesting|房间号码|
+
+停止该房间的录制，并立即将其删除。
+
+
+
+
+
 
 
 
