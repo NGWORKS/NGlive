@@ -1,0 +1,168 @@
+from db import RecorderDB,Rate
+import uuid,os,datetime
+from pathlib import Path
+from orm import RateOrm
+from initial import works_path,out_path,first_factory,second_factory
+from log import logger
+import json,os,time
+
+class RecorderListener:
+    def __init__(self,ws) -> None:
+        self.ws = ws
+
+    def send(self,message):
+        try:
+            self.ws.send(json.dumps(message))
+        except:
+            logger.warning('ws推送失败，请检查网络连接')
+
+    def SessionStarted(self,event):
+        # 开播/手动开始
+        data = event.dict["artical"]
+        logger.info(f"直播间{data.EventData.RoomId}开播/手动开始录制")
+        self.send({'CMD':"SessionStarted",'ID':data.EventData.SessionId})
+
+    def FileOpening(self,event):
+        # 文件打开
+        data = event.dict["artical"]
+        logger.info(f"直播间{data.EventData.RoomId}新录制文件打开")
+        taskid = str(uuid.uuid1())
+        time_now = time.strftime("%Y%m%d", time.localtime())
+        output = str(Path('/') / out_path / str(time_now) / str(data.EventData.RoomId) )
+        if not os.path.isdir(output):
+            os.makedirs(output)
+
+        with RecorderDB(Rate) as f:
+            f.add(
+                TaskId = taskid,
+                SessionId = data.EventData.SessionId,
+                RoomId = data.EventData.RoomId,
+                File = Path(data.EventData.RelativePath).name,
+                StartTime = data.EventData.FileOpenTime, 
+                Origin = str(Path('/') / works_path / data.EventData.RelativePath),
+                OutPut = str(Path('/') / output / f'{Path(data.EventData.RelativePath).stem}.mp4'),
+                Recorder = False
+            )
+            self.send({'CMD':"FileOpening",'ID':taskid})
+
+    def FileClosed(self,event):
+        # 文件关闭
+        data = event.dict["artical"]
+        logger.info(f"直播间{data.EventData.RoomId}一个文件完成录制，文件关闭")
+        with RecorderDB(Rate) as f:
+            Ratedata = f.filter(File = Path(data.EventData.RelativePath).name)[0]
+            Ratedata.Recorder = True
+            co_model = RateOrm.from_orm(Ratedata)
+            if len(first_factory) != 0:
+                for q in first_factory:
+                    q.put(co_model)
+            self.send({'CMD':"FileClosed",'ID':co_model.TaskId})
+
+    def SessionEnded(self,event):
+        # 关播/手动停止
+        data = event.dict["artical"]
+        logger.info(f"直播间{data.EventData.RoomId}关播/手动结束录制")
+        self.send({'CMD':"SessionEnded",'ID':data.EventData.SessionId})
+
+
+    
+class TranscodeListener:
+    def __init__(self,ws) -> None:
+        self.ws = ws
+
+    def send(self,message):
+        try:
+            self.ws.send(json.dumps(message))
+        except:
+            logger.warning('ws推送失败，请检查网络连接')
+
+    def TranscodeStarted(self,event):
+        # 开始转码
+        task = event.dict["artical"]
+        with RecorderDB(Rate) as f:
+            data = f.filter(TaskId = task.tasksid)[0]
+            data.Transcode = False
+        logger.info(f"任务{task.tasksid} 开始转码")
+        self.send({'CMD':"TranscodeStarted",'ID':task.tasksid})
+    
+    def IsTranscode(self,event):
+        # 正在转码
+        task = event.dict["artical"]
+        logger.debug(f"任务{task.tasksid} 正在转码,进度{task.progress}%")
+        self.send({'CMD':"IsTranscode",'ID':task.tasksid,'COMP':task.progress})
+    
+    def TranscodeEnded(self,event):
+        # 结束转码
+        task = event.dict["artical"]
+        with RecorderDB(Rate) as f:
+            data = f.filter(TaskId = task.tasksid)[0]
+            data.Transcode = True
+            co_model = RateOrm.from_orm(data)
+            if len(second_factory) != 0:
+                for q in second_factory:
+                    if q[0] == "After_Transcode":
+                        q[1].put(co_model)
+        logger.info(f"任务{task.tasksid} 结束转码")
+        self.send({'CMD':"TranscodeEnded",'ID':task.tasksid})
+    
+    def TranscodeError(self,event):
+        # 转码出错
+        task = event.dict["artical"]
+        with RecorderDB(Rate) as f:
+            data = f.filter(TaskId = task.tasksid)[0]
+            data.Error = True       
+            data.EndedTime = datetime.datetime.now()
+        logger.error(f"任务{task.tasksid} 转码出错")
+        self.send({'CMD':"TranscodeError",'ID':task.tasksid})
+
+class UpListener:
+    def __init__(self,ws) -> None:
+        self.ws = ws
+
+    def send(self,message):
+        try:
+            self.ws.send(json.dumps(message))
+        except:
+            logger.warning('ws推送失败，请检查网络连接')
+    def UpStarted(self,event):
+        # 开始上传
+        task = event.dict["artical"]
+        with RecorderDB(Rate) as f:
+            data = f.filter(TaskId = task.tasksid)[0]
+            data.Upload = False
+        logger.info(f"任务{task.tasksid} 开始上传")
+        self.send({'CMD':"UpStarted",'ID':task.tasksid})
+        
+    
+    def IsUp(self,event):
+        # 正在上传
+        task = event.dict["artical"]
+        logger.debug(f"任务{task.tasksid} 正在上传,进度{task.progress}%")
+        self.send({'CMD':"IsUp",'ID':task.tasksid,'COMP':task.progress})
+    
+    def UpEnded(self,event):
+        # 结束上传
+        task = event.dict["artical"]
+        with RecorderDB(Rate) as f:
+            data = f.filter(TaskId = task.tasksid)[0]
+            data.Upload = True       
+            data.EndedTime = datetime.datetime.now()
+            co_model = RateOrm.from_orm(data)
+            if len(second_factory) != 0:
+                for q in second_factory:
+                    if q[0] == "After_Up":
+                        q[1].put(co_model)
+        logger.info(f"任务{task.tasksid} 结束上传")
+        self.send({'CMD':"UpEnded",'ID':task.tasksid})
+    
+    def UpError(self,event):
+        # 上传出错
+        task = event.dict["artical"]
+        with RecorderDB(Rate) as f:
+            data = f.filter(TaskId = task.tasksid)[0]
+            data.Error = True       
+            data.EndedTime = datetime.datetime.now()
+        logger.error(f"任务{task.tasksid} 上传出错")
+        self.send({'CMD':"UpError",'ID':task.tasksid})
+
+
