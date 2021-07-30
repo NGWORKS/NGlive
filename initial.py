@@ -1,12 +1,21 @@
+"""
+这个文件实现了对于NGlive一些简单的配置。
+"""
 import os
 from taskslist import UPLOAD,TRANSCODE
 
 
+# 录播姬位置
 RecorderPath = '.\BililiveRecorder\BililiveRecorder.Cli.exe'
+# 录播姬 webapi启动端口
 api_port = 8200
+# 发送心跳包
 sendHeartBeat = True
 
+# 录播姬的工作目录
 works_path = "F:\\录播"
+
+# 转码输出位置
 out_path = "./out"
 
 workpath = os.getcwd()
