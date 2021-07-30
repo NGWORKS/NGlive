@@ -1,0 +1,8 @@
+# .gitignore
+__pycache__/
+.vscode/
+out/
+Recorder.db
+logs/
+runtime.log
+password.py
