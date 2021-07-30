@@ -1,3 +1,6 @@
+"""
+用于监控系统各项数据
+"""
 import psutil
 def cpu():
     cpu = psutil.cpu_count()
