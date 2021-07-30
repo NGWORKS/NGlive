@@ -1,3 +1,10 @@
+"""
+监听器
+
+>> 用于监听各种事件并响应
+>> 是本项目 生产者-消费者模型中重要的一环
+
+"""
 from db import RecorderDB,Rate
 import uuid,os,datetime
 from pathlib import Path
@@ -7,6 +14,17 @@ from log import logger
 import json,os,time
 
 class RecorderListener:
+    """
+    录播姬事件监听器
+    --------------
+
+    用于监听-响应录播姬的三种事件：
+
+    * SessionStarted 直播开启
+    * FileOpening 文件打开
+    * FileClosed 文件关闭
+    * SessionEnded 直播关闭
+    """
     def __init__(self,ws) -> None:
         self.ws = ws
 
@@ -26,12 +44,15 @@ class RecorderListener:
         # 文件打开
         data = event.dict["artical"]
         logger.info(f"直播间{data.EventData.RoomId}新录制文件打开")
+        # 生成唯一的task id
         taskid = str(uuid.uuid1())
         time_now = time.strftime("%Y%m%d", time.localtime())
+        # 用于新建相应的输出目录
         output = str(Path('/') / out_path / str(time_now) / str(data.EventData.RoomId) )
         if not os.path.isdir(output):
             os.makedirs(output)
 
+        # 当文件打开时 向 流程数据表添加一个新纪录
         with RecorderDB(Rate) as f:
             f.add(
                 TaskId = taskid,
@@ -49,6 +70,7 @@ class RecorderListener:
         # 文件关闭
         data = event.dict["artical"]
         logger.info(f"直播间{data.EventData.RoomId}一个文件完成录制，文件关闭")
+        # 更新流程数据表
         with RecorderDB(Rate) as f:
             Ratedata = f.filter(File = Path(data.EventData.RelativePath).name)[0]
             Ratedata.Recorder = True
@@ -67,6 +89,17 @@ class RecorderListener:
 
     
 class TranscodeListener:
+    """
+    转码事件响应
+    -----------
+
+    用于监听-响应转码的四种事件：
+
+    * TranscodeStarted 开始转码
+    * IsTranscode 文件转码中
+    * TranscodeEnded 转码结束（成功）
+    * TranscodeError 转码错误
+    """
     def __init__(self,ws) -> None:
         self.ws = ws
 
@@ -116,6 +149,17 @@ class TranscodeListener:
         self.send({'CMD':"TranscodeError",'ID':task.tasksid})
 
 class UpListener:
+    """
+    上传事件响应
+    -----------
+
+    用于监听-响应转码的四种事件：
+
+    * UpStarted 开始上传
+    * IsUp 上传中
+    * UpEnded 上传结束（成功）
+    * UpError 上传错误
+    """
     def __init__(self,ws) -> None:
         self.ws = ws
 
