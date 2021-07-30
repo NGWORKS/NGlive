@@ -24,7 +24,7 @@ out_path = "./out"
 NGhost = "127.0.0.1"
 
 # NGlive 服务器端口
-NGport = "8100"
+NGport = 8100
 
 
 
