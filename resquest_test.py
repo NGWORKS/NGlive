@@ -1,3 +1,6 @@
+"""
+使用 pydantic 整理验证各种数据
+"""
 from typing import Optional
 from pydantic import BaseModel,validator
 from datetime import datetime

@@ -1,3 +1,10 @@
+"""
+用于验证数据库中读出来的ORM模型
+
+>> 验证 Recorder 表
+>> 验证 RateOrm 表 
+
+"""
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
