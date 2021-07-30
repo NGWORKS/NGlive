@@ -1,4 +1,3 @@
-
 from baidupcs_py import commands
 from baidupcs_py.baidupcs import BaiduPCSApi, api
 from baidupcs_py.commands import share
@@ -10,6 +9,10 @@ from pathlib import Path
 
 from db import RecorderDB,Rate
 from log import logger
+
+
+# 请参阅 baidupcs_py 自行更改 cookies bduss
+from password import cookies,bduss
 
 
 
