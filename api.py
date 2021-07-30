@@ -1,4 +1,5 @@
 
+from initial import NGhost, NGport
 from fastapi import FastAPI, BackgroundTasks
 import time
 from eventManager import Event
@@ -117,5 +118,6 @@ async def get_Room(roomid:int):
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app='api:app', host="127.0.0.1",
-                port=8100, reload=True, debug=True)
+    from initial import NGhost,NGport
+    uvicorn.run(app='api:app', host=NGhost,
+                port=NGport, reload=True, debug=True)

@@ -14,7 +14,7 @@
 
 
 ### 3、环境
-本项目基于**Python3.8.0**开发，**在其他版本的运行状态未知**。**请在安装依赖前阅读下面的说明** 可以有效减少出问题的概率。
+本项目基于**Python3.9.0**开发，**在其他版本的运行状态未知**。**请在安装依赖前阅读下面的说明** 可以有效减少出问题的概率。
 
 ### 4、依赖
 |  Package  |  Version  |
@@ -58,7 +58,47 @@
 外联群QQ:781665797
 
 # 二、使用
-TODO
+## 配置录播姬
+略 请参考 [`BililiveRecorder`](https://github.com/Bililive/BililiveRecorder)的配置文档
+录播姬需要配置webhook
+
+## 配置NGlive
+下载本项目后，用任意IDE打开 `initial.py`
+
+找到以下代码片段：
+```python
+# 录播姬位置 如果您没有使用webapi版本的录播姬会导致一些错误发送
+RecorderPath = '.\BililiveRecorder\BililiveRecorder.Cli.exe'
+# 录播姬 webapi启动端口
+api_port = 8200
+# 发送心跳包
+sendHeartBeat = True
+
+# 录播姬的工作目录
+works_path = "F:\\录播"
+
+# 转码输出位置
+out_path = "./out"
+
+# 录播姬需要配置 webhook 地址为 下面的ip和端口加上路径 /webhook/
+# NGlive 正向服务器地址
+NGhost = "127.0.0.1"
+
+# NGlive 服务器端口
+NGport = "8100"
+```
+根据自己的实际情况配置。
+
+## 直接使用
+您仅需要按照上述方法配置后下载本项目，双击运行`api.py`文件。
+
+## 终端中运行
+您可以在项目目录下打开终端：
+输入以下命令：
+
+```
+python api.py
+```
 
 
 # 三、如何工作

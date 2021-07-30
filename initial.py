@@ -18,6 +18,16 @@ works_path = "F:\\录播"
 # 转码输出位置
 out_path = "./out"
 
+
+# 录播姬需要配置 webhook 地址为 下面的ip和端口加上路径 /webhook/
+# NGlive 正向服务器地址
+NGhost = "127.0.0.1"
+
+# NGlive 服务器端口
+NGport = "8100"
+
+
+
 workpath = os.getcwd()
 os.chdir(workpath)
 
