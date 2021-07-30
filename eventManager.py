@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+这个程序文件实现了事件驱动的基本功能，并且为事件驱动建立了基本的操作方法
+"""
 from os import name
 from queue import Queue, Empty
 from threading import *
@@ -18,7 +21,6 @@ class EventManager:
 
     def __Run(self):
         """引擎运行"""
-        # print('{}_run'.format(self.count))
         while self.__active == True:
             try:
                 # 获取事件的阻塞时间设为1秒
@@ -30,7 +32,6 @@ class EventManager:
 
     def __EventProcess(self, event):
         """处理事件"""
-        # print('{}_EventProcess'.format(self.count))
         # 检查是否存在对该事件进行监听的处理函数
         if event.type_ in self.__handlers:
             # 若存在，则按顺序将事件传递给处理函数执行
@@ -40,7 +41,6 @@ class EventManager:
 
     def Start(self):
         """启动"""
-        # print('{}_Start'.format(self.count))
         # 将事件管理器设为启动
         self.__active = True
         # 启动事件处理线程
@@ -49,7 +49,6 @@ class EventManager:
 
     def Stop(self):
         """停止"""
-        # print('{}_Stop'.format(self.count))
         # 将事件管理器设为停止
         self.__active = False
         # 等待事件处理线程退出
@@ -58,7 +57,6 @@ class EventManager:
 
     def AddEventListener(self, type_, handler):
         """绑定事件和监听器处理函数"""
-        # print('{}_AddEventListener'.format(self.count))
         # 尝试获取该事件类型对应的处理函数列表，若无则创建
         try:
             handlerList = self.__handlers[type_]
@@ -73,7 +71,6 @@ class EventManager:
         
     def RemoveEventListener(self, type_, handler):
         """移除监听器的处理函数"""
-        # print('{}_RemoveEventListener'.format(self.count))
         try:
             handlerList = self.handlers[type_]
             # 如果该函数存在于列表中，则移除
@@ -88,7 +85,6 @@ class EventManager:
 
     def SendEvent(self, event):
         """发送事件，向事件队列中存入事件"""
-        # print('{}_SendEvent'.format(self.count))
         self.__eventQueue.put(event)
         self.count += 1
 
