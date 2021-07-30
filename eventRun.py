@@ -1,3 +1,11 @@
+"""
+这个程序文件实现了启动相关线程、注册监听器、自我修复的功能
+
+>> 启动各项功能
+>> 注册相应的事件监听器
+>> 提供系统状态监测、各线程工作状态监测
+
+"""
 from os import name
 from loguru import logger
 from linstener import RecorderListener, TranscodeListener,UpListener
@@ -11,7 +19,13 @@ import ctypes
 from log import logger
 from systemInfo import get_sys_info
 
+
 class NGlive:
+    """
+    NGlive初始化
+    -----------
+    这个类实现了启动NGlive各项功能，并且初始化事件监听器以及对于其他线程的监控。
+    """
     def __init__(self) -> None:
         global transcode
         global up
@@ -40,6 +54,16 @@ class NGlive:
         self._async_raise(thread.ident, SystemExit)
         
     def ListenerImport(self): 
+        """
+        初始化监听器
+        -----------
+        这个方法实现了初始化监听器
+
+        * recorderlistner 用于监听-响应录播姬相关事件
+        * transcodelistner 用于监听-响应转码模块相关事件
+        * uplistener 用于监听-响应上传模块相关事件
+
+        """
         logger.debug("正在初始化监听器")
         recorderlistner = RecorderListener(self.ws)
         self.eventManager.AddEventListener("SessionStarted", recorderlistner.SessionStarted)
@@ -63,6 +87,19 @@ class NGlive:
         logger.debug("监听器初始化成功")
     
     def functionBlock(self):
+        """
+        功能模块初始化
+        -------------
+
+        这个方法对于NGlive的一些常用功能进行初始化
+
+        * transcodego 是用于转码的模块 它运行在一个名为 `Transcode` 的线程
+        * upgo 是用于上传文件到云端的模块 它运行在一个名为 `Upload` 的线程
+        * wsgo 是保持维护一个WebSocket 它主动向中心服务器推送各种信息 它运行在一个名为 `WS` 的线程
+        * tasksDoc 是用来监测主要线程的模块，它可以重启出现致命性错误而退出的线程 它运行在一个名为 `tasksDocter` 的线程
+        * monitor 是用于监测系统各项数据 发送心跳和服务器状态，是中心服务器判断集群成员健康情况的重要模块 它运行在一个名为 `Monitor` 的线程
+
+        """
         self.transcodego = Thread(target=self.transcode.transcode_manege,name="Transcode")
         # 上传模块
         self.upgo = Thread(target=self.up.up_manege,name="Upload")
@@ -74,6 +111,11 @@ class NGlive:
         self.monitor = Thread(target=get_sys_info,name="Monitor",args=(self.ws,))
     
     def tasksGo(self):
+        """
+        启动线程
+        -------
+        这个方法实现了启动上述定义好的任务。
+        """
         logger.info("正在初始化任务线程")
         self.transcodego.start()
         self.upgo.start()
@@ -83,6 +125,12 @@ class NGlive:
         logger.info("任务线程初始化成功")
     
     def tasksDocter(self):
+        """
+        任务状态监控
+        -----------
+
+        在使用中难免出现错误导致线程退出，这个模块旨在监测退出的线程并且重启它们。
+        """
         import time
         logger.debug("正在初始化任务线程监控模块")
         while True:
