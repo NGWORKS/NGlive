@@ -1,32 +1,33 @@
+# -*- coding: utf-8 -*-
 """
 这个文件实现了对于NGlive一些简单的配置。
 """
 import os
 from taskslist import UPLOAD,TRANSCODE
+from configparser import ConfigParser
+
+config = ConfigParser()
+config.read('config.ini',encoding="utf-8")
 
 
 # 录播姬位置
-RecorderPath = '.\BililiveRecorder\BililiveRecorder.Cli.exe'
+RecorderPath = config['BASIC']['RecorderPath']
 # 录播姬 webapi启动端口
-api_port = 8200
-# 发送心跳包
-sendHeartBeat = True
+api_port = config['BASIC']['api_port']
 
 # 录播姬的工作目录
-works_path = "F:\\录播"
+works_path = config['BASIC']['works_path']
 
 # 转码输出位置
-out_path = "./out"
+out_path = config['BASIC']['out_path']
 
 
 # 录播姬需要配置 webhook 地址为 下面的ip和端口加上路径 /webhook/
 # NGlive 正向服务器地址
-NGhost = "127.0.0.1"
+NGhost = config['BASIC']['NGhost']
 
 # NGlive 服务器端口
-NGport = 8100
-
-
+NGport = int(config['BASIC']['NGport'])
 
 workpath = os.getcwd()
 os.chdir(workpath)
