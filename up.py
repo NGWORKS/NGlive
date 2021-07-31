@@ -10,6 +10,8 @@ from pathlib import Path
 from db import RecorderDB,Rate
 from log import logger
 
+up__active = True
+
 
 # 请参阅 baidupcs_py 自行更改 cookies bduss
 from password import cookies,bduss
@@ -32,9 +34,11 @@ def getpwd():
 
 
 B = BaiduPCSApi(cookies=extract_cookies(cookies),bduss=bduss)
+
 class up:
     def __init__(self,eventManager):
         self.__eventManager = eventManager
+        self.__active = True
 
     def sendEvent(self,msg,**dt):
         event = Event(type_=msg)
@@ -44,30 +48,25 @@ class up:
     def upf(self,localpaths, remotedir,id):
         ft = from_tos([localpaths],remotedir)
         upload(api=B,show_progress=False,from_to_list=ft,_tid=id,eventManager=self.__eventManager)
-    
-    def up_manege(self):
-        logger.debug("正在初始化上传模块")
-        while True:
-            task = UPLOAD.get(block=True)
-            self.sendEvent("UpStarted",tasksid = task.TaskId)
-            print(task)
-            upfile = task.OutPut
-            if task.OutPut is None or task.Transcode is not True:
-                print("mriy")
-                upfile = task.Origin
-            clouldpath = "/vup/"
-            self.upf(upfile ,clouldpath ,task.TaskId)
-            password = getpwd()
-            period=7
-            logger.debug(f"上传子任务完毕")
-            clouldfilepath = f"{clouldpath}{Path(upfile).name}"
-            shared_link = B.share(clouldfilepath, password=password, period=period)
-            logger.info(f"分享链接{shared_link.url}，密码{password}，有效期{period}天。")
-            with RecorderDB(Rate) as f:
-                Ratedata = f.filter(TaskId = task.TaskId)[0]
-                Ratedata.Clould = clouldfilepath
-                Ratedata.ShareUrl = shared_link.url
-                Ratedata.SharePwd = password
+
+    def up_manege(self,task):
+        self.sendEvent("UpStarted",tasksid = task.TaskId)
+        upfile = task.OutPut
+        if task.OutPut is None or task.Transcode is not True:
+            upfile = task.Origin
+        clouldpath = "/vup/"
+        self.upf(upfile ,clouldpath ,task.TaskId)
+        password = getpwd()
+        period=7
+        logger.debug(f"上传子任务完毕")
+        clouldfilepath = f"{clouldpath}{Path(upfile).name}"
+        shared_link = B.share(clouldfilepath, password=password, period=period)
+        logger.info(f"分享链接{shared_link.url}，密码{password}，有效期{period}天。")
+        with RecorderDB(Rate) as f:
+            Ratedata = f.filter(TaskId = task.TaskId)[0]
+            Ratedata.Clould = clouldfilepath
+            Ratedata.ShareUrl = shared_link.url
+            Ratedata.SharePwd = password
 
 
 

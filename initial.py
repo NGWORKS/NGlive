@@ -31,7 +31,6 @@ NGport = int(config['BASIC']['NGport'])
 
 # ws
 wspath =  config['BASIC']['wspath']
-print(wspath)
 
 workpath = os.getcwd()
 os.chdir(workpath)

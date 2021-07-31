@@ -24,6 +24,7 @@ class transcode:
     def __init__(self,eventManager):
         self.__eventManager = eventManager
         self.pros = 0
+        self.__active = True
 
     def sendEvent(self,msg,**dt):
         """
@@ -107,7 +108,7 @@ class transcode:
 
 
 
-    def transcode_manege(self):
+    def transcode_manege(self,task):
         """
         转码管理模块
         -----------
@@ -116,10 +117,7 @@ class transcode:
         进行基本数据解析
 
         """
-        logger.debug("正在初始化转码模块")
-        while True:
-            task = TRANSCODE.get(block=True)
-            self.sendEvent("TranscodeStarted",tasksid = task.TaskId)
-            cmd  = f"ffmpeg -y -i {task.Origin} -vcodec libx264 -crf 24 {task.OutPut}"
-            self.do_ffmpeg_transcode(cmd,task.TaskId)
+        self.sendEvent("TranscodeStarted",tasksid = task.TaskId)
+        cmd  = f"ffmpeg -y -i {task.Origin} -vcodec libx264 -crf 24 {task.OutPut}"
+        self.do_ffmpeg_transcode(cmd,task.TaskId)
 

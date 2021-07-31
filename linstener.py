@@ -77,7 +77,7 @@ class RecorderListener:
             co_model = RateOrm.from_orm(Ratedata)
             if len(first_factory) != 0:
                 for q in first_factory:
-                    q.put(co_model)
+                    q.append(co_model)
             self.send({'CMD':"FileClosed",'ID':co_model.TaskId})
 
     def SessionEnded(self,event):
@@ -134,7 +134,7 @@ class TranscodeListener:
             if len(second_factory) != 0:
                 for q in second_factory:
                     if q[0] == "After_Transcode":
-                        q[1].put(co_model)
+                        q[1].append(co_model)
         logger.info(f"任务{task.tasksid} 结束转码")
         self.send({'CMD':"TranscodeEnded",'ID':task.tasksid})
     
@@ -195,7 +195,7 @@ class UpListener:
             if len(second_factory) != 0:
                 for q in second_factory:
                     if q[0] == "After_Up":
-                        q[1].put(co_model)
+                        q[1].append(co_model)
         logger.info(f"任务{task.tasksid} 结束上传")
         self.send({'CMD':"UpEnded",'ID':task.tasksid})
     

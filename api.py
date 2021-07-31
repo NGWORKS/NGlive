@@ -1,6 +1,6 @@
 from types import resolve_bases
 from fastapi import FastAPI, BackgroundTasks
-import time
+import time,os
 from eventManager import Event
 from resquest_test import Webhook
 from db import RecorderDB,Recorder
@@ -13,13 +13,16 @@ NGlive = NGlive()
 def eventGo():
     from initial import NGhost, NGport
     logger.info("正在初始化")
-    NGlive.ListenerImport()
-    NGlive.functionBlock()
-    NGlive.tasksGo()
+    NGlive.eventManager.Start()
+    NGlive.run_recorder()
+    NGlive.run_transcode()
+    NGlive.run_upload()
+    NGlive.run_ws()
+    NGlive.run_tasksdocter()
+    NGlive.run_monitor()
     logger.info("初始化成功")
-
     logger.info("检查webhook配置")
-    time.sleep(5)
+    time.sleep(2)
     res = getWebHook()
     hasurl = res["data"]["config"]["optionalWebHookUrlsV2"]["hasValue"]
     url = res["data"]["config"]["optionalWebHookUrlsV2"]["value"]
@@ -27,10 +30,25 @@ def eventGo():
     if hasurl is False or url != isurl:
         logger.info("webhook有误 进行配置")
         setWebHookV2(isurl)
-    
     logger.info("webhook配置检查完毕")
 
-app = FastAPI(on_startup=[eventGo])
+def eventStop():
+    logger.info("正在执行退出")
+    logger.info("正在关闭线程监测模块")
+    NGlive.stop_tasksdocter()
+    logger.info("正在注销监听器")
+    NGlive.eventManager.Stop()
+    logger.info("正在关闭上传模块")
+    NGlive.stop_up()
+    logger.info("正在关闭转码模块")
+    NGlive.stop_transcode()
+    logger.info("正在关闭ws模块")
+    NGlive.stop_ws()
+    logger.info("正在关闭录播姬")
+    NGlive.stop_recorder()
+    logger.warning("感谢使用！再见~")
+
+app = FastAPI(on_startup=[eventGo],on_shutdown=[eventStop])
 
 def timetr(timestr):
     return time.mktime(time.strptime(timestr,'%Y-%m-%dT%H:%M:%S'))
@@ -119,10 +137,18 @@ async def get_Room(roomid:int):
             return {"code":0,"data":room}
     return {"code":4042,"msg":"没有这个房间哦"}
 
+@app.get("/kill")
+async def kill_up():
+    eventStop()
+    return "呦西"
+
+@app.get("/run")
+async def run():
+    eventGo()
+    return "呦西"
 
 
 if __name__ == '__main__':
     import uvicorn
-    from initial import NGhost,NGport
-    uvicorn.run(app='api:app', host=NGhost,
-                port=NGport, reload=True, debug=True)
+    uvicorn.run(app='api:app', host="127.0.0.1",
+                port=8100, reload=True, debug=True)

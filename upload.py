@@ -1,4 +1,3 @@
-from db import Rate
 from typing import Optional, List, Tuple, IO
 
 import os
@@ -55,19 +54,6 @@ def _wait_start():
             time.sleep(1)
         else:
             break
-
-
-def _toggle_stop(*args, **kwargs):
-    global UPLOAD_STOP
-    UPLOAD_STOP = not UPLOAD_STOP
-    if UPLOAD_STOP:
-        print("[i yellow]Uploading stop[/i yellow]")
-    else:
-        print("[i yellow]Uploading continue[/i yellow]")
-
-
-# Pass "p" to toggle uploading start/stop
-KeyboardMonitor.register(KeyHandler("p", callback=_toggle_stop))
 
 
 def to_remotepath(sub_path: str, remotedir: str) -> str:
@@ -166,22 +152,6 @@ def upload(
             eventManager=eventManager,
             _tid=_tid
         )
-    elif upload_type == UploadType.Many:
-        upload_many(
-            api,
-            from_to_list,
-            ondup,
-            max_workers=max_workers,
-            encrypt_password=encrypt_password,
-            encrypt_type=encrypt_type,
-            slice_size=slice_size,
-            ignore_existing=ignore_existing,
-            show_progress=show_progress,
-            user_id=user_id,
-            user_name=user_name,
-            check_md5=check_md5,
-        )
-
 
 def _init_encrypt_io(
     api: BaiduPCSApi,
@@ -579,79 +549,6 @@ def upload_file_concurrently(
         encrypt_io.close()
         if task_id is not None and progress_task_exists(task_id):
             _progress.reset(task_id)
-
-
-def upload_many(
-    api: BaiduPCSApi,
-    from_to_list: List[FromTo],
-    ondup: str = "overwrite",
-    encrypt_password: bytes = b"",
-    encrypt_type: EncryptType = EncryptType.No,
-    max_workers: int = CPU_NUM,
-    slice_size: int = DEFAULT_SLICE_SIZE,
-    ignore_existing: bool = True,
-    show_progress: bool = True,
-    rapiduploadinfo_file: Optional[str] = None,
-    user_id: Optional[int] = None,
-    user_name: Optional[str] = None,
-    check_md5: bool = False,
-):
-    """Upload files concurrently that one file is with one connection"""
-
-    excepts = {}
-    semaphore = Semaphore(max_workers)
-    with _progress:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futs = {}
-            for idx, from_to in enumerate(from_to_list):
-                semaphore.acquire()
-                task_id = None
-                if show_progress:
-                    task_id = _progress.add_task(
-                        "upload", start=False, title=from_to.from_
-                    )
-
-                logger.debug(
-                    "`upload_many`: Upload: index: %s, task_id: %s", idx, task_id
-                )
-
-                fut = executor.submit(
-                    sure_release,
-                    semaphore,
-                    upload_file,
-                    api,
-                    from_to,
-                    ondup,
-                    encrypt_password=encrypt_password,
-                    encrypt_type=encrypt_type,
-                    slice_size=slice_size,
-                    ignore_existing=ignore_existing,
-                    task_id=task_id,
-                    user_id=user_id,
-                    user_name=user_name,
-                    check_md5=check_md5,
-                )
-                futs[fut] = from_to
-
-            for fut in as_completed(futs):
-                e = fut.exception()
-                if e is not None:
-                    from_to = futs[fut]
-                    excepts[from_to] = e
-
-    logger.debug("======== Uploading end ========")
-
-    # Summary
-    if excepts:
-        table = Table(title="Upload Error", box=SIMPLE, show_edge=False)
-        table.add_column("From", justify="left", overflow="fold")
-        table.add_column("To", justify="left", overflow="fold")
-        table.add_column("Error", justify="left")
-
-        for from_to, e in sorted(excepts.items()):
-            table.add_row(from_to.from_, Text(str(e), style="red"))
-
-        _progress.console.print(table)
 
 
 @retry(

@@ -19,7 +19,7 @@ class wsc:
 
 
     def on_close(self,ws):
-        print("### closed ###")
+        logger.info("WS连接关闭")
 
 
 
@@ -49,4 +49,4 @@ class wsc:
                                     on_close=self.on_close)
 
         self.ws = ws
-        ws.run_forever()    
+        ws.run_forever()
