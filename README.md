@@ -58,6 +58,8 @@
 外联群QQ:781665797
 
 # 二、使用
+## 安装并配置ffmpeg
+您如果用到了转码模块 需要安装并配置 ffmpeg 您需要在环境变量中配置他或者自行修改代码。
 ## 配置录播姬
 略 请参考 [`BililiveRecorder`](https://github.com/Bililive/BililiveRecorder)的配置文档
 录播姬需要配置webhook
