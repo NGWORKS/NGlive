@@ -48,7 +48,7 @@ def network ():
 	return network_info
 
 def infolist():
-    res = {"UUID":"ca4d9c3f-a5fe-4eb8-a8b2-43da82f94c9c","name":"NGlive-1","cpu":cpu(),"memory":mem(),"disk":disk()}
+    res = {"CMD":"heartbeat","UUID":"ca4d9c3f-a5fe-4eb8-a8b2-43da82f94c9c","name":"NGlive-1","cpu":cpu(),"memory":mem(),"disk":disk()}
     return res
 
     
