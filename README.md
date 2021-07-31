@@ -65,29 +65,37 @@
 录播姬需要配置webhook
 
 ## 配置NGlive
-下载本项目后，用任意IDE打开 `initial.py`
+下载本项目后，用任意IDE打开 `config.ini`
 
 找到以下代码片段：
-```python
-# 录播姬位置 如果您没有使用webapi版本的录播姬会导致一些错误发送
-RecorderPath = '.\BililiveRecorder\BililiveRecorder.Cli.exe'
-# 录播姬 webapi启动端口
+```ini
+[BASIC]
+; 录播姬的位置 本项目带有一个含有GraphQL API 的版本
+; 如果您使用不含有 GraphQL API 的版本，会导致部分功能不可用
+; 不用带引号 绝对路径和相对路径都能用
+RecorderPath = ./BililiveRecorder/BililiveRecorder.Cli.exe
+; 录播姬的 GraphQL API 端口
 api_port = 8200
-# 发送心跳包
-sendHeartBeat = True
-
-# 录播姬的工作目录
-works_path = "F:\\录播"
-
-# 转码输出位置
-out_path = "./out"
-
-# 录播姬需要配置 webhook 地址为 下面的ip和端口加上路径 /webhook/
-# NGlive 正向服务器地址
-NGhost = "127.0.0.1"
-
-# NGlive 服务器端口
+; 录播姬的工作目录 里面要包含配置 如果您不会配置，请查看录播姬的文档
+works_path = F:\\录播
+; 转码输出的路径
+out_path = ./out
+; 录播姬需要配置 webhook 地址为 http://127.0.0.1:8100/webhook/
+; NGlive 正向服务器地址
+NGhost = 127.0.0.1
+; NGlive 服务器端口
 NGport = 8100
+; WS地址
+wspath = ws://lb.ngworks.cn/nglive/nglive_xa/ws?token=3b1e903e-1a8c-8fa8-296e-dbd9bfcc2e38
+
+[TRANSCODE]
+; 转码设置 还在写
+
+[COOKIES]
+; 百度云的cookies  还在写
+
+[FACTORY]
+; 流程控制  还在写
 ```
 根据自己的实际情况配置。
 
