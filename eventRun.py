@@ -6,6 +6,7 @@
 >> 提供系统状态监测、各线程工作状态监测
 
 """
+from initial import NGhost
 from os import name
 from loguru import logger
 from linstener import RecorderListener, TranscodeListener,UpListener
@@ -15,7 +16,7 @@ from wsclient import *
 from trcode import transcode
 from up import up
 import inspect
-import ctypes
+import ctypes,subprocess
 from log import logger
 from systemInfo import get_sys_info
 
@@ -106,6 +107,7 @@ class NGlive:
         # ws上报模块
         self.wsgo = Thread(target=self.ws.run,name="WS")
         # 线程医生
+        self.Recordergo = Thread(target=self.run_Recorder,name="BiliRecorder")
         self.tasksDoc = Thread(target=self.tasksDocter,name="tasksDocter")
         # 系统监控
         self.monitor = Thread(target=get_sys_info,name="Monitor",args=(self.ws,))
@@ -121,9 +123,32 @@ class NGlive:
         self.upgo.start()
         self.wsgo.start()
         self.tasksDoc.start()
+        self.Recordergo.start()
         self.monitor.start()
         logger.info("任务线程初始化成功")
-    
+
+    def run_Recorder(self):
+        logger.info("正在启动录播姬")
+        from initial import RecorderPath,works_path,api_port
+        cmd = f'"{RecorderPath}" run {works_path} --bind http://127.0.0.1:{api_port}'
+        result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,shell=True,encoding="gbk")
+        while True:
+            next_line = result.stdout.readline().strip()
+            return_line = next_line
+            if return_line == '' and result.poll() != None:
+                break
+            if return_line in [f"System.IO.IOException: Failed to bind to address http://127.0.0.1:{api_port}: address already in use.","System.Net.Sockets.SocketException (10013): 以一种访问权限不允许的方式做了一个访问套接字的尝试。","System.Net.Sockets.SocketException (10049): 在其上下文中，该请求的地址无效。"]:
+                logger.error(f"录播姬出现错误:{return_line}")
+                raise Exception(return_line)
+            if return_line in "Dispose called":
+                logger.error("录播姬意外关闭，原因未知")
+                raise Exception(return_line)
+        
+        returncode = result.wait()
+        if returncode:
+            logger.error(f"录播姬出现错误:{return_line}")
+            raise Exception(return_line)
+                        
     def tasksDocter(self):
         """
         任务状态监控
@@ -135,6 +160,11 @@ class NGlive:
         logger.debug("正在初始化任务线程监控模块")
         while True:
             time.sleep(2)
+            if not self.Recordergo.is_alive():
+                logger.error("录播姬挂了")
+                self.Recordergo = Thread(target=self.run_Recorder,name="BiliRecorder")
+                self.Recordergo.start()
+
             if not self.transcodego.is_alive() and self.transcodego_tag == False:
                 logger.error("转码线程挂了,重开")
                 self.transcodego = Thread(target=self.transcode.transcode_manege,name="Transcode")

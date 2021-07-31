@@ -1,4 +1,4 @@
-
+from types import resolve_bases
 from initial import NGhost, NGport
 from fastapi import FastAPI, BackgroundTasks
 import time
@@ -8,22 +8,28 @@ from db import RecorderDB,Recorder
 from __GraphQL import *
 from eventRun import NGlive
 from log import logger
-import subprocess
 
 NGlive = NGlive()
 
 def eventGo():
-    logger.info("正在启动录播姬")
-    from initial import RecorderPath,works_path,api_port
-    cmd = f'{RecorderPath} run {works_path}  --bind http://127.0.0.1:{api_port}'
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,shell=True,encoding="gbk")
-    logger.info("录播姬启动完毕")
     
     logger.info("正在初始化")
     NGlive.ListenerImport()
     NGlive.functionBlock()
     NGlive.tasksGo()
     logger.info("初始化成功")
+
+    logger.info("检查webhook配置")
+    time.sleep(5)
+    res = getWebHook()
+    hasurl = res["data"]["config"]["optionalWebHookUrlsV2"]["hasValue"]
+    url = res["data"]["config"]["optionalWebHookUrlsV2"]["value"]
+    isurl = f"http://{NGhost}:{NGport}/webhook/"
+    if hasurl is False or url != isurl:
+        logger.info("webhook有误 进行配置")
+        setWebHookV2(isurl)
+    
+    logger.info("webhook配置检查完毕")
 
 app = FastAPI(on_startup=[eventGo])
 

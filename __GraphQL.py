@@ -36,6 +36,16 @@ def refreshRoom(roomid:int,objectId:str):
     r = requests.get(weburl)
     return r.json()
 
+def setWebHookV2(url:str):
+    weburl = f"http://127.0.0.1:{api_port}/graphql?query=mutation%20MyMutation%20%7B%0A%20%20__typename%0A%20%20setConfig(config:%20%7BoptionalWebHookUrlsV2:%20%7BhasValue:%20true,%20value:%20%22{url}%22%7D%7D)%20%7B%0A%20%20%20%20optionalWebHookUrlsV2%20%7B%0A%20%20%20%20%20%20hasValue%0A%20%20%20%20%20%20value%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D&variables=%7B%7D&operationName=MyMutation"
+    r = requests.get(weburl)
+    return r.json()
+
+def getWebHook():
+    weburl = f"http://127.0.0.1:{api_port}/graphql?query=query%20MyQuery%20%7B%0A%20%20config%20%7B%0A%20%20%20%20optionalWebHookUrlsV2%20%7B%0A%20%20%20%20%20%20hasValue%0A%20%20%20%20%20%20value%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D&variables=%7B%7D&operationName=MyQuery"
+    r = requests.get(weburl)
+    return r.json()
+    
 if __name__ =="__main__":
     # 查看所有房间信息
     allroom = getRooms()
