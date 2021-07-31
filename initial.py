@@ -29,6 +29,10 @@ NGhost = config['BASIC']['NGhost']
 # NGlive 服务器端口
 NGport = int(config['BASIC']['NGport'])
 
+# ws
+wspath =  config['BASIC']['wspath']
+print(wspath)
+
 workpath = os.getcwd()
 os.chdir(workpath)
 

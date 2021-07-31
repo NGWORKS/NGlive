@@ -1,6 +1,6 @@
 import websocket
 from log import logger
-
+from initial import wspath
 ws_on = True
 
 
@@ -42,7 +42,7 @@ class wsc:
     def run(self):
         logger.debug("正在初始化WS模块")
         websocket.enableTrace(False)
-        ws = websocket.WebSocketApp("ws://lb.ngworks.cn/nglive/nglive_xa/ws?token=3b1e903e-1a8c-8fa8-296e-dbd9bfcc2e38",
+        ws = websocket.WebSocketApp(wspath,
                                     on_open= self.on_opend,
                                     on_message=self.on_message,
                                     on_error=self.on_error,

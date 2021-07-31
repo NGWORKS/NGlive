@@ -1,5 +1,4 @@
 from types import resolve_bases
-from initial import NGhost, NGport
 from fastapi import FastAPI, BackgroundTasks
 import time
 from eventManager import Event
@@ -12,7 +11,7 @@ from log import logger
 NGlive = NGlive()
 
 def eventGo():
-    
+    from initial import NGhost, NGport
     logger.info("正在初始化")
     NGlive.ListenerImport()
     NGlive.functionBlock()
