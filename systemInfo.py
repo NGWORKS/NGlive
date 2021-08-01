@@ -51,15 +51,4 @@ def infolist():
     res = {"CMD":"heartbeat","UUID":"ca4d9c3f-a5fe-4eb8-a8b2-43da82f94c9c","name":"NGlive-1","cpu":cpu(),"memory":mem(),"disk":disk()}
     return res
 
-    
-def get_sys_info(ws):
-    import time,json
-    from log import logger
-    def send(message,ws):
-        try:
-            ws.send(json.dumps(message))
-        except:
-            logger.warning('ws推送失败，请检查网络连接')
-    while True:
-        time.sleep(5)
-        send(infolist(),ws)
+

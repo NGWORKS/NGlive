@@ -119,5 +119,6 @@ class transcode:
         """
         self.sendEvent("TranscodeStarted",tasksid = task.TaskId)
         cmd  = f"ffmpeg -y -i {task.Origin} -vcodec libx264 -crf 24 {task.OutPut}"
+        logger.debug(f"生成转码命令：{cmd}")
         self.do_ffmpeg_transcode(cmd,task.TaskId)
 

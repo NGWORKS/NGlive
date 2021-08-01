@@ -9,7 +9,6 @@
 from math import fabs
 from types import resolve_bases
 from upload import upload
-from loguru import logger
 from linstener import RecorderListener, TranscodeListener,UpListener
 from threading import Thread
 from eventManager import EventManager
@@ -19,7 +18,7 @@ from up import up
 import inspect
 import ctypes,subprocess
 from log import logger
-from systemInfo import get_sys_info
+from systemInfo import *
 
 class NGlive:
     """
@@ -38,6 +37,7 @@ class NGlive:
         self.up__active = True
         self.Transcode__active = True
         self.Recorder__active = True
+        self.monitor__active = True
         
     def ListenerImport(self): 
         """
@@ -122,20 +122,34 @@ class NGlive:
             time.sleep(2)
             if not self._run_recorder.is_alive():
                 logger.error("录播姬挂了")
-                self.run_recorder()
+                thisfunc = self.run_recorder
+                thisfunc()
 
             if not self._run_transcode.is_alive():
                 logger.error("转码线程挂了,重开")
-                self.run_transcode()
+                thisfunc = self.run_transcode
+                thisfunc()
 
             if not self._run_upload.is_alive():
                 logger.error("上传线程挂了,重开")
-                self.run_upload()
+                thisfunc = self.run_upload()
+                thisfunc()
 
             if not self._run_ws.is_alive():
                 logger.error("ws线程挂了,重开")
-                self.run_ws()
+                thisfunc = self.run_ws()
+                thisfunc()
 
+    def monitor(self):
+        import time,json
+        def send(message):
+            try:
+                self.ws.send(json.dumps(message))
+            except:
+                logger.warning('ws推送失败，请检查网络连接')
+        while self.monitor__active == True:
+            time.sleep(5)
+            send(infolist())
     """
     功能模块初始化
     -------------
@@ -149,7 +163,6 @@ class NGlive:
     * monitor 是用于监测系统各项数据 发送心跳和服务器状态，是中心服务器判断集群成员健康情况的重要模块 它运行在一个名为 `Monitor` 的线程
 
     """
-
     def run_transcode(self):
         self._run_transcode = Thread(target=self.Transcode,name="Transcode")
         self._run_transcode.start()
@@ -171,7 +184,7 @@ class NGlive:
         self._run_tasksdocter.start()
     
     def run_monitor(self):
-        self._run_monitor = Thread(target=get_sys_info,name="Monitor",args=(self.ws,))
+        self._run_monitor = Thread(target=self.monitor,name="Monitor")
         self._run_monitor.start()
         
     """
@@ -181,14 +194,17 @@ class NGlive:
         self.tasksDocter__active = False
         # 等待事件处理线程退出
         self._run_tasksdocter.join()
+        self.tasksDocter__active = True
 
     def stop_up(self):
         self.up__active = False
         self._run_upload.join()
+        self.up__active = True
 
     def stop_transcode(self):
         self.Transcode__active = False
-        self._run_tasksdocter.join()
+        self._run_transcode.join()
+        self.Transcode__active = True
 
     def stop_recorder(self):
         self.result.terminate()
@@ -196,5 +212,9 @@ class NGlive:
     def stop_ws(self):
         self.ws.ws.close()
 
+    def stop_monitor(self):
+        self.monitor__active = False
+        self._run_monitor.join()
+        self.monitor__active = True
         
 

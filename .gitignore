@@ -6,3 +6,5 @@ Recorder.db
 logs/
 runtime.log
 password.py
+Transcode.tmp
+UPload.tmp
