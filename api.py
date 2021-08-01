@@ -219,4 +219,4 @@ async def run():
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app='api:app', host="127.0.0.1",
-                port=8100, reload=True, debug=True)
+                port=8100, reload=False, debug=False)

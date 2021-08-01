@@ -106,6 +106,43 @@ class transcode:
             self.sendEvent("TranscodeError",tasksid = tasksid)
 
 
+    def cmd_command(self,Origin,OutPut):
+        """
+        生成cmd命令
+        """
+        from configparser import ConfigParser
+        config = ConfigParser()
+        config.read('config.ini',encoding='utf-8')
+        transcode_config = config['TRANSCODE']
+        model = transcode_config['model']
+        encoder = transcode_config['encoder']
+        crf = transcode_config['crf']
+        cq = transcode_config['cq']
+        Bitrate = transcode_config['Bitrate']
+        bufsize = transcode_config['bufsize']
+        preset = transcode_config['preset']
+        # 选择编码器
+        if encoder == "X264":
+            encoder = "libx264"
+        else:
+            logger.error("不支持的编码器")
+            raise TypeError("不支持的编码器")
+        bz = ""
+        if model == "CRF":
+            model = f"-crf {crf}"
+        elif model == "CQ":
+            model = f"-qp {cq}"
+        elif model == "B":
+            model = f"-b {Bitrate}k"
+        elif model == "VBR":
+            model = ""
+            bz = f"-bufsize {bufsize}k"
+        elif model == "ABR":
+            model = f"-b:v {Bitrate}k"
+            bz = f"-bufsize {bufsize}k"
+        
+        cmd  = f"ffmpeg -y -i {Origin} -vcodec {encoder} -preset {preset} {model} {bz} {OutPut}"
+        return cmd
 
 
     def transcode_manege(self,task):
@@ -118,7 +155,7 @@ class transcode:
 
         """
         self.sendEvent("TranscodeStarted",tasksid = task.TaskId)
-        cmd  = f"ffmpeg -y -i {task.Origin} -vcodec libx264 -crf 24 {task.OutPut}"
+        cmd  = self.cmd_command(task.Origin,task.OutPut)
         logger.debug(f"生成转码命令：{cmd}")
         self.do_ffmpeg_transcode(cmd,task.TaskId)
 
