@@ -43,7 +43,6 @@ async def eventGo():
     logger.info("webhook配置检查完毕")
 
 def eventStop():
-    Save_list()
     logger.info("正在执行退出")
     logger.info("正在关闭线程监测模块")
     NGlive.stop_tasksdocter()
@@ -57,6 +56,7 @@ def eventStop():
     NGlive.stop_monitor()
     logger.info("正在注销监听器")
     NGlive.eventManager.Stop()
+    Save_list()
     logger.info("正在关闭ws模块")
     NGlive.stop_ws()
     logger.warning("感谢使用！再见~")

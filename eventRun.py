@@ -6,7 +6,9 @@
 >> 提供系统状态监测、各线程工作状态监测
 
 """
+from enum import Flag
 from math import fabs
+from taskslist import TRANSCODE, UPLOAD
 from types import resolve_bases
 from upload import upload
 from linstener import RecorderListener, TranscodeListener,UpListener
@@ -97,17 +99,19 @@ class NGlive:
         from taskslist import UPLOAD
         logger.debug("正在初始化上传模块")
         while self.up__active == True:
-            if len(UPLOAD) !=0 :
-                task = UPLOAD.popleft()
-                self.up.up_manege(task)
+            task = UPLOAD.get(block = True)
+            if not task:
+                    break
+            self.up.up_manege(task)
 
     def Transcode(self):
         from taskslist import TRANSCODE
         logger.debug("正在初始化转码模块")
         while self.Transcode__active == True:
-                if len(TRANSCODE) !=0 :
-                    task = TRANSCODE.popleft()
-                    self.transcode.transcode_manege(task)
+                task = TRANSCODE.get(block = True)
+                if not task:
+                    break
+                self.transcode.transcode_manege(task)
 
     def tasksDocter(self):
         """
@@ -197,12 +201,18 @@ class NGlive:
         self.tasksDocter__active = True
 
     def stop_up(self):
-        self.up__active = False
+        if UPLOAD.empty():
+            UPLOAD.put(False)
+        else:
+            self.up__active = False
         self._run_upload.join()
         self.up__active = True
 
     def stop_transcode(self):
-        self.Transcode__active = False
+        if TRANSCODE.empty():
+            TRANSCODE.put(False)
+        else:
+            self.Transcode__active = False
         self._run_transcode.join()
         self.Transcode__active = True
 

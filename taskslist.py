@@ -1,51 +1,65 @@
 """
 任务队列
 """
-from collections import deque
+from queue import Queue
 import pickle,os
 
 
 # 转码队列
-TRANSCODE = deque()
+TRANSCODE = Queue()
 # 上传队列
-UPLOAD = deque()
+UPLOAD = Queue()
 
 def Save_list():
-    if len(TRANSCODE) != 0:
-        TR = pickle.dumps(TRANSCODE)
+    if not TRANSCODE.empty():
+        i = 0
+        tclist = []
+        while i <= TRANSCODE.qsize():
+            tclist.append(TRANSCODE.get())
+            i+=1
+            
+        TR = pickle.dumps(tclist)
         with open('Transcode.tmp','wb') as f:
             f.write(TR)
             f.close()
     
-    if len(UPLOAD) != 0:
-        TR = pickle.dumps(UPLOAD)
+    if not UPLOAD.empty():
+        i = 0
+        tclist = []
+        while i <= UPLOAD.qsize():
+            tclist.append(UPLOAD.get())
+            i+=1
+        TR = pickle.dumps(tclist)
         with open('Upload.tmp','wb') as f:
             f.write(TR)
             f.close()
 
 def Load_list():
-    global TRANSCODE,UPLOAD
     if os.path.isfile("Transcode.tmp"):
         f=open("Transcode.tmp","rb")
-        TRANSCODE = pickle.load(f)
+        tclist = pickle.load(f)
+        for element in tclist:
+            TRANSCODE.put(element)
         f.close()
         os.remove("Transcode.tmp")
     
     if os.path.isfile("Upload.tmp"):
         f=open("Upload.tmp","rb")
-        UPLOAD = pickle.load(f)
+        tclist = pickle.load(f)
+        for element in tclist:
+            UPLOAD.put(element)
         f.close()
         os.remove("Upload.tmp")
 
 if __name__ == "__main__":
-    TRANSCODE.append(1)
-    UPLOAD.append(2)
+    TRANSCODE.put(1)
+    UPLOAD.put(2)
     Save_list()
     import time
     time.sleep(5)
     Load_list()
-    print(TRANSCODE.pop())
-    print(UPLOAD.pop())
+    print(TRANSCODE.get())
+    print(UPLOAD.get())
 
 
     
