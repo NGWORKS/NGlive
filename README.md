@@ -67,7 +67,7 @@
 ## 配置NGlive
 下载本项目后，用任意IDE打开 `config.ini`
 
-找到以下代码片段：
+你会看到这些配置选项
 ```ini
 [BASIC]
 ; 录播姬的位置 本项目带有一个含有GraphQL API 的版本
@@ -85,11 +85,46 @@ out_path = ./out
 NGhost = 127.0.0.1
 ; NGlive 服务器端口
 NGport = 8100
-; WS地址
+; WS地址 如果有 请修改为您自己的
 wspath = ws://lb.ngworks.cn/nglive/nglive_xa/ws?token=3b1e903e-1a8c-8fa8-296e-dbd9bfcc2e38
 
 [TRANSCODE]
-; 转码设置 还在写
+
+; 码率控制模式或编码方式 必须全部大写！！
+; COPY 直接复制 flv文件转换封装为 MP4
+
+; CRF  恒定速率因子模式 进行码率控制
+; CQ  恒定量化器模式 进行码率控制
+; B   固定目标码率模式 进行码率控制
+
+; ABR  平均比特率的编码方式。
+; VBR  动态（可变）比特率的方式进行编码。
+model = CQ
+
+; 编码器
+; 目前尽只可以使用 X264 必须全部大写！！
+encoder = X264
+
+; 当使用 CRF 模式时 需要配置 固定码率系数 crf
+; crf 参数应当根据实际选择 0 是最清晰 但是体积是最大的 51 是最大压缩 画质损失最大
+; crf 参数区间应为[0~51] 主观上讲 [18~28]是一个合理的区间 本配置文件默认  24
+crf = 24
+
+; 当使用 CQ 模式时 需要配置 恒定量化因子 cqp
+; cqp 参数应当根据实际选择 0 是最清晰 但是体积是最大的 51 是最大压缩 画质损失最大
+; cqp 参数区间应为[0~51] 主观上讲 [18~28]是一个合理的区间 本配置文件默认  24
+cq = 24
+
+; 当使用ABR模式或 B模式时 需要配置 目标比特率 单位(Kbps)
+; 目标比特率请根据您的实际需求选择
+Bitrate = 5000
+
+; 用于设置码率控制缓冲器的大小，设置的好处是，让整体的码率更趋近于希望的值，减少波动
+bufsize = 2000
+
+; preset 参数主要调节编码速度和质量的平衡 必须全部小写！！
+; 有ultrafast、superfast、veryfast、faster、fast、medium、slow、slower、veryslow、placebo这10个选项，从快到慢
+preset = veryfast
 
 [COOKIES]
 ; 百度云的cookies  还在写
