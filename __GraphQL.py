@@ -17,7 +17,7 @@ def addRoom(roomid:int):
     return r.json()
 
 def removeRoom(roomid:int,objectId:str):
-    weburl = f"http://127.0.0.1:{api_port}/graphql?query=mutation%20MyMutation%20%7B%0A%20%20__typename%0A%20%20removeRoom(objectId:%20%22{objectId}%22,%20roomId:%20{roomid})%20%7B%0A%20%20%20%20areaNameChild%0A%20%20%20%20areaNameParent%0A%20%20%20%20name%0A%20%20%20%20objectId%0A%20%20%20%20shortId%0A%20%20%20%20title%0A%20%20%20%20roomConfig%20%7B%0A%20%20%20%20%20%20roomId%0A%20%20%20%20%20%20autoRecord%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D&variables=%7B%7D&operationName=MyMutation"
+    weburl = f"http://127.0.0.1:{api_port}/graphql?query=mutation%20MyMutation%20%7B%0A%20%20__typename%0A%20%20removeRoom(objectId:%20%22{objectId}%22,%20roomId:%20{roomid})%20%7B%0A%20%20%20%20name%0A%20%20%20%20title%0A%20%20%20%20shortId%0A%20%20%20%20roomConfig%20%7B%0A%20%20%20%20%20%20roomId%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D&variables=%7B%7D&operationName=MyMutation"
     r = requests.get(weburl)
     return r.json()
 

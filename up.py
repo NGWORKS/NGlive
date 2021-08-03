@@ -1,6 +1,8 @@
+from logging import error
 from baidupcs_py import commands
 from baidupcs_py.baidupcs import BaiduPCSApi, api
 from baidupcs_py.commands import share
+from pydantic.main import EXTRA_LINK
 from upload import upload,from_tos
 from taskslist import UPLOAD
 from eventManager import Event
@@ -33,12 +35,15 @@ def getpwd():
         return code
 
 
-B = BaiduPCSApi(cookies=extract_cookies(cookies),bduss=bduss)
 
 class up:
     def __init__(self,eventManager):
         self.__eventManager = eventManager
         self.__active = True
+        try:
+            self.API = BaiduPCSApi(cookies=extract_cookies(cookies),bduss=bduss)
+        except:
+            logger.error("百度网盘登录出现问题")
 
     def sendEvent(self,msg,**dt):
         event = Event(type_=msg)
@@ -47,7 +52,7 @@ class up:
     
     def upf(self,localpaths, remotedir,id):
         ft = from_tos([localpaths],remotedir)
-        upload(api=B,show_progress=False,from_to_list=ft,_tid=id,eventManager=self.__eventManager)
+        upload(api=self.API,show_progress=False,from_to_list=ft,_tid=id,eventManager=self.__eventManager)
 
     def up_manege(self,task):
         self.sendEvent("UpStarted",tasksid = task.TaskId)
@@ -60,13 +65,21 @@ class up:
         period=7
         logger.debug(f"上传子任务完毕")
         clouldfilepath = f"{clouldpath}{Path(upfile).name}"
-        shared_link = B.share(clouldfilepath, password=password, period=period)
+        shared_link = self.API.share(clouldfilepath, password=password, period=period)
         logger.info(f"分享链接{shared_link.url}，密码{password}，有效期{period}天。")
         with RecorderDB(Rate) as f:
             Ratedata = f.filter(TaskId = task.TaskId)[0]
             Ratedata.Clould = clouldfilepath
             Ratedata.ShareUrl = shared_link.url
             Ratedata.SharePwd = password
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type:
+            print(f'exc_type: {exc_type}')
+            print(f'exc_value: {exc_value}')
+            print(f'exc_traceback: {exc_tb}')
+            print('exception handled')
+        return True 
 
 
 
