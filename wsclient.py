@@ -33,14 +33,14 @@ class wsc:
         time.sleep(1)
         logger.warning(f"正在尝试第{self.reconnect_count}次重连")
         self.reconnect_count+=1
-        if self.reconnect_count<=100:
+        if self.reconnect_count<=10:
             self.run()
         else:
             logger.error("连接错误次数过多，已停用ws")
             self.reconnect_count = 1
+            raise ConnectionError("ws连接失败次数过多")
 
     def run(self):
-        logger.debug("正在初始化WS模块")
         websocket.enableTrace(False)
         ws = websocket.WebSocketApp(wspath,
                                     on_open= self.on_opend,

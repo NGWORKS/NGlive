@@ -123,9 +123,9 @@ async def remove_Room(roomid:int):
         roomId = room["roomConfig"]["roomId"]
         shortId = room["shortId"]
         if roomId == roomid or shortId == roomid:
-            if recording:
-                # 这个人人还在播，先给他掐了
-                stopRecording(roomid,objectId)
+            # if recording:
+            #     # 这个人人还在播，先给他掐了
+            #     stopRecording(roomid,objectId)
             # 然后再移出录播列表
             await asyncio.sleep(2)
             res = removeRoom(roomid,objectId)
@@ -180,8 +180,10 @@ async def webend():
 
 
 @app.get("/kill")
-async def kill_up(background_tasks: BackgroundTasks):
-    background_tasks.add_task(webend)
+async def kill_up():
+    #background_tasks: BackgroundTasks):
+    # background_tasks.add_task(webend)
+    NGlive.kill_tasksdocter()
     return "呦西"
 
 @app.get("/run")
@@ -220,3 +222,5 @@ if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app='api:app', host="127.0.0.1",
                 port=8100, reload=False, debug=False)
+
+

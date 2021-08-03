@@ -22,6 +22,25 @@ import ctypes,subprocess
 from log import logger
 from systemInfo import *
 
+
+def _async_raise(tid, exctype):
+   """raises the exception, performs cleanup if needed"""
+   tid = ctypes.c_long(tid)
+   if not inspect.isclass(exctype):
+      exctype = type(exctype)
+   res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+   if res == 0:
+      raise ValueError("invalid thread id")
+   elif res != 1:
+      # """if it returns a number greater than one, you're in trouble,  
+      # and you should call it again with exc=NULL to revert the effect"""  
+      ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+      raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def stop_thread(thread):
+   _async_raise(thread.ident, SystemExit)
+
 class NGlive:
     """
     NGlive初始化
@@ -83,14 +102,15 @@ class NGlive:
         while True:
             next_line = self.result.stdout.readline().strip()
             return_line = next_line
+            logger.info(return_line)
             if return_line == '' and self.result.poll() != None:
                 break
             if return_line in [f"System.IO.IOException: Failed to bind to address http://127.0.0.1:{api_port}: address already in use.","System.Net.Sockets.SocketException (10013): 以一种访问权限不允许的方式做了一个访问套接字的尝试。","System.Net.Sockets.SocketException (10049): 在其上下文中，该请求的地址无效。"]:
                 logger.error(f"录播姬出现错误:{return_line}")
-            if return_line in "Dispose called":
-                logger.warning("录播姬关闭")
-                Recorder__active = False
-                break
+            # if return_line in "Dispose called":
+            #     logger.warning("录播姬关闭")
+            #     Recorder__active = False
+            #     break
         returncode = self.result.wait()
         if returncode and Recorder__active == True :
             logger.error(f"录播姬出现错误:{return_line}")
@@ -141,8 +161,9 @@ class NGlive:
 
             if not self._run_ws.is_alive():
                 logger.error("ws线程挂了,重开")
-                thisfunc = self.run_ws()
-                thisfunc()
+                self._run_ws = Thread(target=self.ws.run,name="WS")
+                self._run_ws.start()
+
 
     def monitor(self):
         import time,json
@@ -192,7 +213,8 @@ class NGlive:
         self._run_monitor.start()
         
     """
-    关闭线程的方法
+    关闭线程的方法 亚萨西的关闭
+    它会在线程执行完毕当前任务的时候，才关闭掉
     """
     def stop_tasksdocter(self):
         self.tasksDocter__active = False
@@ -226,5 +248,15 @@ class NGlive:
         self.monitor__active = False
         self._run_monitor.join()
         self.monitor__active = True
+
+    """
+    强♂硬的关闭 不管他在干嘛 直接掐了
+    不建议在一般场景使用这个，因为可能会带来一些意想不到的问题。
+    """
+    def kill_tasksdocter(self):
+        logger.warning("正在强制关闭转码线程")
+        stop_thread(self._run_transcode)
+        logger.warning("强制关闭转码线程成功")
+
         
 
