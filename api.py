@@ -127,7 +127,7 @@ async def remove_Room(roomid:int):
             #     # 这个人人还在播，先给他掐了
             #     stopRecording(roomid,objectId)
             # 然后再移出录播列表
-            await asyncio.sleep(2)
+            # await asyncio.sleep(2)
             res = removeRoom(roomid,objectId)
             return {"code":0,"data":res["data"]["removeRoom"]}
     return {"code":4042,"msg":"没有这个房间哦"}
